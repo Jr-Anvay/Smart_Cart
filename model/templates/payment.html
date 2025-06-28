@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Smart Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .payment-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .payment-header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .payment-method {
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .payment-method:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        
+        .payment-method.active {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
+            box-shadow: 0 6px 20px rgba(0,123,255,0.15);
+        }
+        
+        .payment-method input[type="radio"] {
+            display: none;
+        }
+        
+        .payment-details {
+            display: none;
+            margin-top: 20px;
+            padding: 25px;
+            border: 1px solid #dee2e6;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        }
+        
+        .payment-details.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card-input {
+            position: relative;
+        }
+        
+        .card-input i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        .security-info {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .order-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            position: sticky;
+            top: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .payment-form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .method-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+        
+        .credit-card-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .upi-icon {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .netbanking-icon {
+            background: linear-gradient(135deg, #3494e6 0%, #ec6ead 100%);
+            color: white;
+        }
+        
+        .btn-custom {
+            border-radius: 25px;
+            padding: 15px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.15);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-4 payment-container">
+        <!-- Header -->
+        <div class="payment-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-credit-card text-primary me-2"></i>Secure Payment
+                    </h2>
+                    <p class="text-muted mb-0">Complete your purchase securely</p>
+                </div>
+                <a href="{{ url_for('cart') }}" class="btn btn-outline-secondary btn-custom">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Cart
+                </a>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="payment-form-container">
+                    <h5 class="mb-4">
+                        <i class="fas fa-payment me-2"></i>Choose Payment Method
+                    </h5>
+                    
+                    <form id="payment-form" method="POST" action="{{ url_for('process_payment') }}">
+                        <!-- Credit Card -->
+                        <div class="payment-method" onclick="selectPayment('credit_card')">
+                            <input type="radio" name="payment_method" value="credit_card" id="credit_card">
+                            <div class="d-flex align-items-center">
+                                <div class="method-icon credit-card-icon">
+                                    <i class="fas fa-credit-card fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Credit/Debit Card</h6>
+                                    <small class="text-muted">Visa, Mastercard, American Express accepted</small>
+                                </div>
+                                <div class="ms-auto">
+                                    <i class="fas fa-chevron-right text-muted"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="credit_card_details" class="payment-details">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label class="form-label fw-medium">Card Number</label>
+                                    <div class="card-input">
+                                        <input type="text" class="form-control" placeholder="1234 5678 9012 3456" maxlength="19">
+                                        <i class="fas fa-credit-card"></i>
+                                    </div>
+                                </div>
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label fw-medium">Cardholder Name</label>
+                                    <input type="text" class="form-control" placeholder="John Doe">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-medium">CVV</label>
+                                    <input type="text" class="form-control" placeholder="123" maxlength="4">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-medium">Expiry Month</label>
+                                    <select class="form-select">
+                                        <option value="">Select Month</option>
+                                        <option value="01">01 - January</option>
+                                        <option value="02">02 - February</option>
+                                        <option value="03">03 - March</option>
+                                        <option value="04">04 - April</option>
+                                        <option value="05">05 - May</option>
+                                        <option value="06">06 - June</option>
+                                        <option value="07">07 - July</option>
+                                        <option value="08">08 - August</option>
+                                        <option value="09">09 - September</option>
+                                        <option value="10">10 - October</option>
+                                        <option value="11">11 - November</option>
+                                        <option value="12">12 - December</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-medium">Expiry Year</label>
+                                    <select class="form-select">
+                                        <option value="">Select Year</option>
+                                        <option value="2024">2024</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2026">2026</option>
+                                        <option value="2027">2027</option>
+                                        <option value="2028">2028</option>
+                                        <option value="2029">2029</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- UPI -->
+                        <div class="payment-method" onclick="selectPayment('upi')">
+                            <input type="radio" name="payment_method" value="upi" id="upi">
+                            <div class="d-flex align-items-center">
+                                <div class="method-icon upi-icon">
+                                    <i class="fas fa-mobile-alt fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">UPI Payment</h6>
+                                    <small class="text-muted">Pay using UPI ID or QR Code scan</small>
+                                </div>
+                                <div class="ms-auto">
+                                    <i class="fas fa-chevron-right text-muted"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="upi_details" class="payment-details">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium">UPI ID</label>
+                                    <input type="text" class="form-control" placeholder="yourname@upi">
+                                    <small class="text-muted">Enter your UPI ID to complete payment</small>
+                                </div>
+                                <div class="col-md-6 text-center">
+                                    <p class="text-muted mb-3">Or scan QR code with your UPI app</p>
+                                    <div class="bg-white p-4 d-inline-block border rounded-3 shadow-sm">
+                                        <i class="fas fa-qrcode fa-4x text-muted"></i>
+                                        <p class="small mt-2 mb-0">QR Code will appear here</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Net Banking -->
+                        <div class="payment-method" onclick="selectPayment('netbanking')">
+                            <input type="radio" name="payment_method" value="netbanking" id="netbanking">
+                            <div class="d-flex align-items-center">
+                                <div class="method-icon netbanking-icon">
+                                    <i class="fas fa-university fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Net Banking</h6>
+                                    <small class="text-muted">All major banks supported</small>
+                                </div>
+                                <div class="ms-auto">
+                                    <i class="fas fa-chevron-right text-muted"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="netbanking_details" class="payment-details">
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">Select Your Bank</label>
+                                <select class="form-select">
+                                    <option value="">Choose your bank</option>
+                                    <option value="sbi">State Bank of India</option>
+                                    <option value="hdfc">HDFC Bank</option>
+                                    <option value="icici">ICICI Bank</option>
+                                    <option value="axis">Axis Bank</option>
+                                    <option value="pnb">Punjab National Bank</option>
+                                    <option value="kotak">Kotak Mahindra Bank</option>
+                                    <option value="other">Other Banks</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="security-info">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-shield-alt text-warning fa-2x me-3"></i>
+                                <div>
+                                    <h6 class="mb-1">Secure Payment Guarantee</h6>
+                                    <p class="mb-0 small">Your payment information is encrypted with industry-standard SSL security. We never store your payment details on our servers.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg btn-custom" id="pay-button" disabled>
+                                <i class="fas fa-lock me-2"></i>Complete Secure Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="col-lg-5">
+                <div class="order-summary">
+                    <h5 class="mb-4">
+                        <i class="fas fa-receipt me-2"></i>Order Summary
+                    </h5>
+                    
+                    <div id="order-items" class="mb-4">
+                        <!-- Items will be loaded here -->
+                    </div>
+                    
+                    <hr class="border-light mb-4">
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax (8%):</span>
+                        <span id="tax">$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Processing Fee:</span>
+                        <span id="processing-fee">$2.00</span>
+                    </div>
+                    
+                    <hr class="border-light">
+                    
+                    <div class="d-flex justify-content-between mb-4">
+                        <strong class="h5">Total Amount:</strong>
+                        <strong class="h5" id="final-total">${{ "%.2f"|format(total + (total * 0.08) + 2.00) }}</strong>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <small>You will be redirected to your selected payment provider to complete the transaction securely.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function selectPayment(method) {
+            // Remove active class from all payment methods
+            document.querySelectorAll('.payment-method').forEach(pm => {
+                pm.classList.remove('active');
+            });
+            
+            // Hide all payment details
+            document.querySelectorAll('.payment-details').forEach(pd => {
+                pd.classList.remove('active');
+            });
+            
+            // Activate selected payment method
+            event.currentTarget.classList.add('active');
+            document.getElementById(method).checked = true;
+            document.getElementById(method + '_details').classList.add('active');
+            
+            // Enable pay button
+            const payButton = document.getElementById('pay-button');
+            payButton.disabled = false;
+            
+            // Update button text based on method
+            let buttonText = 'Complete Secure Payment';
+            switch(method) {
+                case 'credit_card':
+                    buttonText = 'Pay with Card';
+                    break;
+                case 'upi':
+                    buttonText = 'Pay with UPI';
+                    break;
+                case 'netbanking':
+                    buttonText = 'Pay with Net Banking';
+                    break;
+            }
+            
+            payButton.innerHTML = `<i class="fas fa-lock me-2"></i>${buttonText}`;
+        }
+        
+        function loadOrderSummary() {
+            fetch('/get_cart_items')
+                .then(response => response.json())
+                .then(data => {
+                    const orderItems = document.getElementById('order-items');
+                    let html = '';
+                    
+                    data.items.forEach(item => {
+                        html += `
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-light">
+                                <div class="d-flex align-items-center">
+                                    <img src="/static/${item.image || 'placeholder.jpg'}" 
+                                         alt="${item.name}" class="me-3" 
+                                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3);">
+                                    <div>
+                                        <div class="fw-medium">${item.name}</div>
+                                        <small class="opacity-75">Quantity: ${item.qty} × $${item.price.toFixed(2)}</small>
+                                    </div>
+                                </div>
+                                <span class="fw-bold">$${item.total.toFixed(2)}</span>
+                            </div>
+                        `;
+                    });
+                    
+                    orderItems.innerHTML = html;
+                    
+                    const subtotal = data.total;
+                    const tax = subtotal * 0.08;
+                    const processingFee = 2.00;
+                    const finalTotal = subtotal + tax + processingFee;
+                    
+                    document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+                    document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+                    document.getElementById('final-total').textContent = `$${finalTotal.toFixed(2)}`;
+                });
+        }
+        
+        // Format card number input
+        document.addEventListener('input', function(e) {
+            if (e.target.placeholder === '1234 5678 9012 3456') {
+                let value = e.target.value.replace(/\s/g, '');
+                let formattedValue = value.replace(/(.{4})/g, '$1 ').trim();
+                if (formattedValue !== e.target.value) {
+                    e.target.value = formattedValue;
+                }
+            }
+        });
+        
+        // Add form validation
+        document.getElementById('payment-form').addEventListener('submit', function(e) {
+            const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+            if (!selectedMethod) {
+                e.preventDefault();
+                alert('Please select a payment method');
+                return;
+            }
+            
+            // Show loading state
+            const submitButton = document.getElementById('pay-button');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Payment...';
+        });
+        
+        // Load order summary on page load
+        loadOrderSummary();
+    </script>
+</body>
+</html>

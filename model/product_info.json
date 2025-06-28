@@ -1,0 +1,12 @@
+{
+  "Parle-G": { "price": 10 ,"image": "/static/images/1.jpg"},
+  "Mariegold": { "price": 20 ,"image": "/static/images/2.jpg"},
+  "Maggie": { "price": 20 ,"image": "/static/images/3.jpg"},
+  "KrackJack": { "price": 25 ,"image": "/static/images/4.jpg"},
+  "Cap": { "price": 100 ,"image": "/static/images/5.jpg"},
+  "Shoes": { "price": 500,"image": "/static/images/6.jpg"},
+  "Battery": { "price": 40 ,"image": "/static/images/7.jpg"},
+  "Googgles": { "price": 120 ,"image": "/static/images/8.jpg"},
+  "Tshirt": { "price": 250 ,"image": "/static/images/9.jpg"},
+  "Bottle": { "price": 80 ,"image": "/static/images/10.jpg"}
+}

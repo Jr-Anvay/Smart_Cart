@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Cart</title>
+</head>
+<body>
+    <h1>Live Smart Cart Detection</h1>
+    <img src="{{ url_for('video_feed') }}" width="720">
+    <h2>Final List</h2>
+    <pre id="bill"></pre>
+
+    <script>
+        // Optional: Auto-refresh the bill periodically (not live yet)
+        setInterval(() => {
+            fetch('/get_bill')
+                .then(res => res.text())
+                .then(data => document.getElementById('bill').textContent = data);
+        }, 3000);
+    </script>
+</body>
+</html>
